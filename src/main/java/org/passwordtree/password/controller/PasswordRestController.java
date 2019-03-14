@@ -169,7 +169,7 @@ public class PasswordRestController {
      * @param passwordDto
      * @return
      */
-    @PutMapping(value = "/page/{id}")
+    @PutMapping("/password/{id}")
     public ResponseEntity<PasswordDto> updatePassword(@PathVariable("id") long id, @RequestBody PasswordDto passwordDto) {
         if(id != passwordDto.getId()) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);

@@ -18,11 +18,22 @@ public class PasswordEntity {
     @Column(name = "page_id", nullable = false)
     private Integer pageId;
 
+    @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "description", nullable = false)
     private String description;
+
+    @Column(name = "username", nullable = false)
     private String username;
+
+    @Column(name = "password", nullable = false)
     private String password;
+
+    @Column(name = "url", nullable = false)
     private String url;
+
+    @Column(name = "icon", nullable = false)
     private String icon;
 
     @Column(name = "time_start")
