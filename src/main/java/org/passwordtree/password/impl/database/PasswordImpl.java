@@ -44,7 +44,7 @@ public class PasswordImpl implements PasswordDao {
         Password password = null;
 
         if(passwordEntity.isPresent())
-            password = mapper.map(passwordEntity, Password.class);
+            password = mapper.map(passwordEntity.get(), Password.class);
 
         return password;
     }
