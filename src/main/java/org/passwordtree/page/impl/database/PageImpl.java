@@ -8,14 +8,14 @@ import org.passwordtree.page.Page;
 import org.passwordtree.page.PageDao;
 import org.passwordtree.page.PageFilter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.Collections;
 import java.util.List;
 
-@Service
+@Repository
 @Transactional
 public class PageImpl implements PageDao {
     @Autowired

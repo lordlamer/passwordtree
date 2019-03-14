@@ -51,7 +51,6 @@ public class PageEntity {
     @Column(name = "sorting", nullable = false)
     private Integer sorting;
 
-
     @Column(name = "time_start")
     @Convert(converter = Jsr310JpaConverters.LocalDateTimeConverter.class)
     private LocalDateTime timeStart;

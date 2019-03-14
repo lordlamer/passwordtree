@@ -19,23 +19,23 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-@RestController(value = "/page")
+@RestController
 public class PageRestController {
     private static final Logger logger = LoggerFactory.getLogger(PageRestController.class);
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
     @Autowired
     private OrikaBeanMapper mapper;
 
     @Autowired
-    PageService pageService;
-
-    private final static String dateFormat = "yyyy-MM-dd'T'HH:mm:ss";
+    private PageService pageService;
 
     /**
      * get all pages
      * @return
      */
-    @RequestMapping(value = "/page", method = RequestMethod.GET)
+    @GetMapping("/page")
     public ResponseEntity<List<PageDto>> listAllPages(
             @RequestParam(name = "id", required = false) Integer id,
             @RequestParam(name = "parent", required = false) Integer parent,
@@ -66,7 +66,7 @@ public class PageRestController {
             @RequestParam(name = "start", required = false) Integer start,
             @RequestParam(name = "limit", required = false) Integer limit
     ) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
         PageFilter pageFilter = new PageFilter();
 
@@ -117,7 +117,7 @@ public class PageRestController {
             if (changeDateEnd != null)
                 pageFilter.setChangeDateEnd(LocalDateTime.parse(changeDateEnd, formatter));
         } catch(DateTimeParseException e) {
-            logger.error("Could not convert date: " + e.getMessage());
+            logger.error("Could not convert date: {}", e.getMessage());
         }
 
         // get filtered user list
@@ -128,10 +128,10 @@ public class PageRestController {
 
         // check for entries
         if(pageDtos.isEmpty()){
-            return new ResponseEntity<List<PageDto>>(HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
-        return new ResponseEntity<List<PageDto>>(pageDtos, HttpStatus.OK);
+        return new ResponseEntity<>(pageDtos, HttpStatus.OK);
     }
 
     /**
@@ -139,17 +139,17 @@ public class PageRestController {
      * @param id
      * @return
      */
-    @RequestMapping(value = "/page/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/page/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PageDto> getPage(@PathVariable("id") long id) {
         Page page = pageService.findById(id);
 
         PageDto pageDto = mapper.map(page, PageDto.class);
 
         if (pageDto == null) {
-            return new ResponseEntity<PageDto>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<PageDto>(pageDto, HttpStatus.OK);
+        return new ResponseEntity<>(pageDto, HttpStatus.OK);
     }
 
     /**
@@ -158,13 +158,13 @@ public class PageRestController {
      * @param ucBuilder
      * @return
      */
-    @RequestMapping(value = "/page", method = RequestMethod.POST)
+    @PostMapping("/page")
     public ResponseEntity<Void> createPage(@RequestBody PageDto pageDto, UriComponentsBuilder ucBuilder) {
 
         Page page = mapper.map(pageDto, Page.class);
 
         if (pageService.isPageExist(page)) {
-            return new ResponseEntity<Void>(HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
         pageService.createPage(page);
@@ -172,7 +172,7 @@ public class PageRestController {
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(ucBuilder.path("/page/{id}").buildAndExpand(page.getId()).toUri());
 
-        return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     /**
@@ -181,23 +181,23 @@ public class PageRestController {
      * @param pageDto
      * @return
      */
-    @RequestMapping(value = "/page/{id}", method = RequestMethod.PUT)
+    @PutMapping(value = "/page/{id}")
     public ResponseEntity<PageDto> updatePage(@PathVariable("id") long id, @RequestBody PageDto pageDto) {
         if(id != pageDto.getId()) {
-            return new ResponseEntity<PageDto>(HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
         Page currentPage = pageService.findById(id);
 
         if (currentPage==null) {
-            return new ResponseEntity<PageDto>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         currentPage = mapper.map(pageDto, Page.class);
 
         pageService.updatePage(currentPage);
 
-        return new ResponseEntity<PageDto>(pageDto, HttpStatus.OK);
+        return new ResponseEntity<>(pageDto, HttpStatus.OK);
     }
 
     /**
@@ -205,27 +205,27 @@ public class PageRestController {
      * @param id
      * @return
      */
-    @RequestMapping(value = "/page/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/page/{id}")
     public ResponseEntity<PageDto> deletePage(@PathVariable("id") long id) {
         Page page = pageService.findById(id);
 
         if (page == null) {
-            return new ResponseEntity<PageDto>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         pageService.deletePageById(id);
 
-        return new ResponseEntity<PageDto>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
      * delete all pages
      * @return
      */
-    @RequestMapping(value = "/page", method = RequestMethod.DELETE)
+    @DeleteMapping("/page")
     public ResponseEntity<PageDto> deleteAllPages() {
         pageService.deleteAllPages();
 
-        return new ResponseEntity<PageDto>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
