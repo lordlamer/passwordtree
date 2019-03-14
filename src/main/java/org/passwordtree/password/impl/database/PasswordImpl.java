@@ -7,18 +7,18 @@ import org.passwordtree.password.PasswordFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Transactional
 public class PasswordImpl implements PasswordDao {
     @Autowired
-    private EntityManager entityManager;
+    private OrikaBeanMapper mapper;
 
     @Autowired
-    private OrikaBeanMapper mapper;
+    private PasswordRepository passwordRepository;
 
     /**
      * find password
@@ -39,7 +39,14 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public Password findById(long id) {
-        return null;
+        Optional<PasswordEntity> passwordEntity = passwordRepository.findById(id);
+
+        Password password = null;
+
+        if(passwordEntity.isPresent())
+            password = mapper.map(passwordEntity, Password.class);
+
+        return password;
     }
 
     /**
@@ -50,7 +57,14 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public boolean isPasswordExist(Password password) {
-        return false;
+        boolean found = false;
+
+        Optional<PasswordEntity> passwordEntity = passwordRepository.findById(Long.valueOf(password.getId()));
+
+        if(passwordEntity.isPresent())
+            found = true;
+
+        return found;
     }
 
     /**
@@ -60,7 +74,9 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public void createPassword(Password password) {
+        PasswordEntity passwordEntity = mapper.map(password, PasswordEntity.class);
 
+        passwordRepository.save(passwordEntity);
     }
 
     /**
@@ -70,7 +86,9 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public void updatePassword(Password password) {
+        PasswordEntity passwordEntity = mapper.map(password, PasswordEntity.class);
 
+        passwordRepository.save(passwordEntity);
     }
 
     /**
@@ -78,7 +96,7 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public void deleteAllPasswords() {
-
+        passwordRepository.deleteAll();
     }
 
     /**
@@ -88,6 +106,6 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public void deletePasswordById(long id) {
-
+        passwordRepository.deleteById(id);
     }
 }
