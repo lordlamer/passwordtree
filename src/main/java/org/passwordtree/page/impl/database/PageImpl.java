@@ -1,8 +1,5 @@
 package org.passwordtree.page.impl.database;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.passwordtree.config.OrikaBeanMapper;
 import org.passwordtree.page.Page;
 import org.passwordtree.page.PageDao;
@@ -11,9 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Transactional
@@ -24,6 +27,9 @@ public class PageImpl implements PageDao {
     @Autowired
     private OrikaBeanMapper mapper;
 
+    @Autowired
+    private PageRepository pageRepository;
+
     /**
      * find pages
      *
@@ -32,97 +38,100 @@ public class PageImpl implements PageDao {
      */
     @Override
     public List<Page> listPages(PageFilter pageFilter) {
-        // get current session
-        Session session = entityManager.unwrap(org.hibernate.Session.class);
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<PageEntity> query = cb.createQuery(PageEntity.class);
+        Root<PageEntity> pageEntityRoot = query.from(PageEntity.class);
 
-        Criteria pageCriteria = session.createCriteria(PageEntity.class, "p");
+        List<Predicate> predicates = new ArrayList<>();
 
-        // build restrictions
         if(pageFilter.getId() != null)
-            pageCriteria.add(Restrictions.eq("p.id", pageFilter.getId()));
+            predicates.add(cb.equal(pageEntityRoot.get("id"), pageFilter.getId()));
 
         if(pageFilter.getParent() != null)
-            pageCriteria.add(Restrictions.eq("p.parent", pageFilter.getParent()));
+            predicates.add(cb.equal(pageEntityRoot.get("parent"), pageFilter.getParent()));
 
         if(pageFilter.getName() != null)
-            pageCriteria.add(Restrictions.like("p.name", "%" + pageFilter.getName() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("name"), "%" + pageFilter.getName() + "%"));
 
         if(pageFilter.getSubtitle() != null)
-            pageCriteria.add(Restrictions.like("p.subtitle", "%" + pageFilter.getSubtitle() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("subtitle"), "%" + pageFilter.getSubtitle() + "%"));
 
         if(pageFilter.getDescription() != null)
-            pageCriteria.add(Restrictions.like("p.description", "%" + pageFilter.getDescription() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("description"), "%" + pageFilter.getDescription() + "%"));
 
         if(pageFilter.getTooltip() != null)
-            pageCriteria.add(Restrictions.like("p.tooltip", "%" + pageFilter.getTooltip() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("tooltip"), "%" + pageFilter.getTooltip() + "%"));
 
         if(pageFilter.getIcon() != null)
-            pageCriteria.add(Restrictions.like("p.icon", "%" + pageFilter.getIcon() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("icon"), "%" + pageFilter.getIcon() + "%"));
 
         if(pageFilter.getAlias() != null)
-            pageCriteria.add(Restrictions.like("p.alias", "%" + pageFilter.getAlias() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("alias"), "%" + pageFilter.getAlias() + "%"));
 
         if(pageFilter.getContentCollapse() != null)
-            pageCriteria.add(Restrictions.eq("p.contentCollapse", pageFilter.getContentCollapse()));
+            predicates.add(cb.equal(pageEntityRoot.get("contentCollapse"), pageFilter.getContentCollapse()));
 
         if(pageFilter.getContentPosition() != null)
-            pageCriteria.add(Restrictions.like("p.contentPosition", "%" + pageFilter.getContentPosition() + "%"));
+            predicates.add(cb.like(pageEntityRoot.get("contnetPosition"), "%" + pageFilter.getContentPosition() + "%"));
 
         if(pageFilter.getShowContentDescription() != null)
-            pageCriteria.add(Restrictions.eq("p.showContentDescription", pageFilter.getShowContentDescription()));
+            predicates.add(cb.equal(pageEntityRoot.get("showContentDescription"), pageFilter.getShowContentDescription()));
 
         if(pageFilter.getShowTableOfContent() != null)
-            pageCriteria.add(Restrictions.eq("p.showTableOfContent", pageFilter.getShowTableOfContent()));
+            predicates.add(cb.equal(pageEntityRoot.get("showTableOfContent"), pageFilter.getShowTableOfContent()));
 
         if(pageFilter.getSorting() != null)
-            pageCriteria.add(Restrictions.eq("p.sorting", pageFilter.getSorting()));
+            predicates.add(cb.equal(pageEntityRoot.get("sorting"), pageFilter.getSorting()));
 
         if(pageFilter.getDeleted() != null)
-            pageCriteria.add(Restrictions.eq("p.deleted", pageFilter.getDeleted()));
+            predicates.add(cb.equal(pageEntityRoot.get("deleted"), pageFilter.getDeleted()));
 
         if(pageFilter.getActive() != null)
-            pageCriteria.add(Restrictions.eq("p.active", pageFilter.getActive()));
+            predicates.add(cb.equal(pageEntityRoot.get("active"), pageFilter.getActive()));
 
         if(pageFilter.getCreatedBy() != null)
-            pageCriteria.add(Restrictions.eq("p.createdBy", pageFilter.getCreatedBy()));
+            predicates.add(cb.equal(pageEntityRoot.get("createdBy"), pageFilter.getCreatedBy()));
 
         if(pageFilter.getChangedBy() != null)
-            pageCriteria.add(Restrictions.eq("p.changedBy", pageFilter.getChangedBy()));
+            predicates.add(cb.equal(pageEntityRoot.get("changedBy"), pageFilter.getChangedBy()));
 
         if(pageFilter.getTimeStartBegin() != null)
-            pageCriteria.add(Restrictions.ge("p.timeStart", pageFilter.getTimeStartBegin()));
+            predicates.add(cb.greaterThan(pageEntityRoot.get("timeStart"), pageFilter.getTimeStartBegin()));
 
         if(pageFilter.getTimeStartEnd() != null)
-            pageCriteria.add(Restrictions.le("p.timeStart", pageFilter.getTimeStartEnd()));
+            predicates.add(cb.lessThan(pageEntityRoot.get("timeStart"), pageFilter.getTimeStartEnd()));
 
         if(pageFilter.getTimeEndBegin() != null)
-            pageCriteria.add(Restrictions.ge("p.timeEnd", pageFilter.getTimeEndBegin()));
+            predicates.add(cb.greaterThan(pageEntityRoot.get("timeEnd"), pageFilter.getTimeEndBegin()));
 
         if(pageFilter.getTimeEndEnd() != null)
-            pageCriteria.add(Restrictions.le("p.timeEnd", pageFilter.getTimeEndEnd()));
+            predicates.add(cb.lessThan(pageEntityRoot.get("timeEnd"), pageFilter.getTimeEndEnd()));
 
         if(pageFilter.getCreateDateBegin() != null)
-            pageCriteria.add(Restrictions.ge("p.createDate", pageFilter.getCreateDateBegin()));
+            predicates.add(cb.greaterThan(pageEntityRoot.get("createDate"), pageFilter.getCreateDateBegin()));
 
         if(pageFilter.getCreateDateEnd() != null)
-            pageCriteria.add(Restrictions.le("p.createDate", pageFilter.getCreateDateEnd()));
+            predicates.add(cb.lessThan(pageEntityRoot.get("createDate"), pageFilter.getCreateDateEnd()));
 
         if(pageFilter.getChangeDateBegin() != null)
-            pageCriteria.add(Restrictions.ge("p.changeDate", pageFilter.getChangeDateBegin()));
+            predicates.add(cb.greaterThan(pageEntityRoot.get("changeDate"), pageFilter.getChangeDateBegin()));
 
         if(pageFilter.getChangeDateEnd() != null)
-            pageCriteria.add(Restrictions.le("p.changeDate", pageFilter.getChangeDateEnd()));
+            predicates.add(cb.lessThan(pageEntityRoot.get("changeDate"), pageFilter.getChangeDateEnd()));
+
+        query.select(pageEntityRoot).where(predicates.toArray(new Predicate[0]));
+
+        TypedQuery typedQuery = entityManager.createQuery(query);
 
         // set limit
         if(pageFilter.getLimit() != null)
-            pageCriteria.setMaxResults(pageFilter.getLimit());
+            typedQuery = typedQuery.setMaxResults(pageFilter.getLimit());
 
         // set start position
         if(pageFilter.getStart() != null)
-            pageCriteria.setFirstResult(pageFilter.getStart());
+            typedQuery = typedQuery.setFirstResult(pageFilter.getStart());
 
-        // get result
-        List<PageEntity> pageEntities = Collections.checkedList(pageCriteria.list(), PageEntity.class);
+        List<PageEntity> pageEntities = typedQuery.getResultList();
 
         return mapper.mapAsList(pageEntities, Page.class);
     }
@@ -135,18 +144,14 @@ public class PageImpl implements PageDao {
      */
     @Override
     public Page findById(long id) {
-        PageEntity pageEntity = findEntityById(id);
+        Optional<PageEntity> pageEntity = pageRepository.findById(id);
 
-        return mapper.map(pageEntity, Page.class);
-    }
+        Page page = null;
 
-    /**
-     * find page entity by given id
-     * @param id
-     * @return
-     */
-    private PageEntity findEntityById(long id) {
-        return entityManager.find(PageEntity.class, id);
+        if(pageEntity.isPresent())
+            page = mapper.map(pageEntity.get(), Page.class);
+
+        return page;
     }
 
     /**
@@ -159,13 +164,9 @@ public class PageImpl implements PageDao {
     public boolean isPageExist(Page page) {
         boolean found = false;
 
-        List<PageEntity> pageEntities = entityManager.createQuery(
-                "SELECT p FROM PageEntity p WHERE p.id = :id",
-                PageEntity.class)
-                .setParameter("id", page.getId())
-                .getResultList();
+        Optional<PageEntity> pageEntity = pageRepository.findById(Long.valueOf(page.getId()));
 
-        if(pageEntities.size() == 1)
+        if(pageEntity.isPresent())
             found = true;
 
         return found;
@@ -180,7 +181,7 @@ public class PageImpl implements PageDao {
     public void createPage(Page page) {
         PageEntity pageEntity = mapper.map(page, PageEntity.class);
 
-        entityManager.persist(pageEntity);
+        pageRepository.save(pageEntity);
     }
 
     /**
@@ -194,7 +195,7 @@ public class PageImpl implements PageDao {
         PageEntity pageEntity = mapper.map(page, PageEntity.class);
 
         // save to database
-        entityManager.merge(pageEntity);
+        pageRepository.save(pageEntity);
     }
 
     /**
@@ -202,7 +203,7 @@ public class PageImpl implements PageDao {
      */
     @Override
     public void deleteAllPages() {
-        entityManager.createQuery("DELETE FROM PageEntity").executeUpdate();
+        pageRepository.deleteAll();
     }
 
     /**
@@ -212,8 +213,6 @@ public class PageImpl implements PageDao {
      */
     @Override
     public void deletePageById(long id) {
-        entityManager.createQuery("DELETE FROM PageEntity p WHERE p.id = :id")
-                .setParameter("id", id)
-                .executeUpdate();
+        pageRepository.deleteById(id);
     }
 }
