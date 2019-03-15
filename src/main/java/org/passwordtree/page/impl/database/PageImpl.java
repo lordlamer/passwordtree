@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -21,7 +22,7 @@ import java.util.Optional;
 @Repository
 @Transactional
 public class PageImpl implements PageDao {
-    @Autowired
+    @PersistenceContext
     private EntityManager entityManager;
 
     @Autowired

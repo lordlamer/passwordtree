@@ -7,13 +7,24 @@ import org.passwordtree.password.PasswordFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 @Transactional
 public class PasswordImpl implements PasswordDao {
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Autowired
     private OrikaBeanMapper mapper;
 
@@ -28,7 +39,85 @@ public class PasswordImpl implements PasswordDao {
      */
     @Override
     public List<Password> listPasswords(PasswordFilter passwordFilter) {
-        return null;
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<PasswordEntity> query = cb.createQuery(PasswordEntity.class);
+        Root<PasswordEntity> passwordEntityRoot = query.from(PasswordEntity.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if(passwordFilter.getId() != null)
+            predicates.add(cb.equal(passwordEntityRoot.get("id"), passwordFilter.getId()));
+
+        if(passwordFilter.getPageId() != null)
+            predicates.add(cb.equal(passwordEntityRoot.get("pageId"), passwordFilter.getPageId()));
+
+        if(passwordFilter.getTitle() != null)
+            predicates.add(cb.like(passwordEntityRoot.get("title"), "%" + passwordFilter.getTitle() + "%"));
+
+        if(passwordFilter.getDescription() != null)
+            predicates.add(cb.like(passwordEntityRoot.get("description"), "%" + passwordFilter.getDescription() + "%"));
+
+        if(passwordFilter.getUsername() != null)
+            predicates.add(cb.like(passwordEntityRoot.get("username"), "%" + passwordFilter.getUsername() + "%"));
+
+        if(passwordFilter.getUrl() != null)
+            predicates.add(cb.like(passwordEntityRoot.get("url"), "%" + passwordFilter.getUrl() + "%"));
+
+        if(passwordFilter.getIcon() != null)
+            predicates.add(cb.like(passwordEntityRoot.get("icon"), "%" + passwordFilter.getIcon() + "%"));
+
+        if(passwordFilter.getDeleted() != null)
+            predicates.add(cb.equal(passwordEntityRoot.get("deleted"), passwordFilter.getDeleted()));
+
+        if(passwordFilter.getActive() != null)
+            predicates.add(cb.equal(passwordEntityRoot.get("active"), passwordFilter.getActive()));
+
+        if(passwordFilter.getCreatedBy() != null)
+            predicates.add(cb.equal(passwordEntityRoot.get("createdBy"), passwordFilter.getCreatedBy()));
+
+        if(passwordFilter.getChangedBy() != null)
+            predicates.add(cb.equal(passwordEntityRoot.get("changedBy"), passwordFilter.getChangedBy()));
+
+        if(passwordFilter.getTimeStartBegin() != null)
+            predicates.add(cb.greaterThan(passwordEntityRoot.get("timeStart"), passwordFilter.getTimeStartBegin()));
+
+        if(passwordFilter.getTimeStartEnd() != null)
+            predicates.add(cb.lessThan(passwordEntityRoot.get("timeStart"), passwordFilter.getTimeStartEnd()));
+
+        if(passwordFilter.getTimeEndBegin() != null)
+            predicates.add(cb.greaterThan(passwordEntityRoot.get("timeEnd"), passwordFilter.getTimeEndBegin()));
+
+        if(passwordFilter.getTimeEndEnd() != null)
+            predicates.add(cb.lessThan(passwordEntityRoot.get("timeEnd"), passwordFilter.getTimeEndEnd()));
+
+        if(passwordFilter.getCreateDateBegin() != null)
+            predicates.add(cb.greaterThan(passwordEntityRoot.get("createDate"), passwordFilter.getCreateDateBegin()));
+
+        if(passwordFilter.getCreateDateEnd() != null)
+            predicates.add(cb.lessThan(passwordEntityRoot.get("createDate"), passwordFilter.getCreateDateEnd()));
+
+        if(passwordFilter.getChangeDateBegin() != null)
+            predicates.add(cb.greaterThan(passwordEntityRoot.get("changeDate"), passwordFilter.getChangeDateBegin()));
+
+        if(passwordFilter.getChangeDateEnd() != null)
+            predicates.add(cb.lessThan(passwordEntityRoot.get("changeDate"), passwordFilter.getChangeDateEnd()));
+
+
+        query.select(passwordEntityRoot).where(predicates.toArray(new Predicate[0]));
+
+        TypedQuery typedQuery = entityManager.createQuery(query);
+
+        // set limit
+        if(passwordFilter.getLimit() != null)
+            typedQuery = typedQuery.setMaxResults(passwordFilter.getLimit());
+
+        // set start position
+        if(passwordFilter.getStart() != null)
+            typedQuery = typedQuery.setFirstResult(passwordFilter.getStart());
+
+        List<PasswordEntity> passwordEntities = typedQuery.getResultList();
+
+        return mapper.mapAsList(passwordEntities, Password.class);
     }
 
     /**
